@@ -2,7 +2,7 @@ package main
 
 func SpamMasker(buffer string) string {
 
-	//Initialize variable
+	// Initialize variable
 	var output []rune
 	var toMask bool
 	validate := "http://"
@@ -11,20 +11,19 @@ func SpamMasker(buffer string) string {
 	for i := 0; i < len(input); i++ {
 
 
-		//Check if last 7 chars of []output == http://
+		// Check if last 7 chars of []output == http://
 		if (len(output) >= len(validate)) && (string(output[i-len(validate):i]) == validate) {
 			toMask = true
 		}
 
-		//Check if link finished
+		// Check if link finished
 		if input[i] == ' ' {
 			toMask = false
 		}
 		
-		// to Mask
+		// Mask
 		if toMask {
-			char := '*'
-			output = append(output, char)
+			output = append(output, '*')
 		} else {
 			output = append(output, input[i])
 		}
