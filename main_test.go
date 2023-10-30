@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -35,8 +34,10 @@ func TestSpamMasker(t *testing.T) {
 	}
 
 	for _, testCase := range testTable {
-		result := SpamMasker(testCase.got)
 
-		assert.Equal(t, testCase.want, result, fmt.Sprintf("Incorrect result. Expected %s, got %s\n", testCase.want, result))
+		t.Run(testCase.got, func(t *testing.T) {
+			result := spamMasker(testCase.got)
+			assert.Equal(t, testCase.want, result)
+		})
 	}
 }
