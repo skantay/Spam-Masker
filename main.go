@@ -1,31 +1,32 @@
 package main
 
-func spamMasker(buffer string) string {
+func SpamMasker(buffer string) string {
+
 	// Initialize variable
 	var output []rune
-
 	var toMask bool
-
 	validate := "http://"
-
 	input := []rune(buffer)
 
-	for index := 0; index < len(input); index++ {
+	for i := 0; i < len(input); i++ {
+
+
 		// Check if last 7 chars of []output == http://
-		if (len(output) >= len(validate)) && (string(output[index-len(validate):index]) == validate) {
+		if (len(output) >= len(validate)) && (string(output[i-len(validate):i]) == validate) {
 			toMask = true
-		} else if input[index] == ' ' {
+		}
+
+		// Check if link finished
+		if input[i] == ' ' {
 			toMask = false
 		}
+		
 		// Mask
 		if toMask {
 			output = append(output, '*')
-
-			continue
+		} else {
+			output = append(output, input[i])
 		}
-
-		char := input[index]
-		output = append(output, char)
 	}
 
 	return string(output)
