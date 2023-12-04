@@ -2,7 +2,6 @@ package mask
 
 import (
 	"fmt"
-	"log"
 	"os"
 )
 
@@ -14,135 +13,120 @@ type presenter interface {
 	present()
 }
 
-type service struct {
+type Service struct {
 	prod producer
 	pres presenter
 }
 
-type worker struct {
-	service
-	text, from, to string
-	result         []string
+type file struct {
+	output, filepathFrom, filepathTo string
 }
 
-func Run() {
-	worker := new(worker)
-	result, err := worker.produce()
+func (f *file) produce() error {
+	err := f.getFilePath()
 	if err != nil {
-		log.Fatal(err)
+		return fmt.Errorf("Produce error | getFilePath(): %w", err)
 	}
 
-	worker.result = result
-
-	_, err = worker.present()
+	err = f.readFile()
 	if err != nil {
-		log.Fatal(err)
-	}
-}
-
-func (w *worker) getText() {
-
-	err := w.getFilePath()
-	if err != nil {
-		log.Fatal(err)
+		return fmt.Errorf("Produce error | readFile(): %w", err)
 	}
 
-	err = w.getString()
-	if err != nil {
-		log.Fatal(err)
-	}
-}
-
-func (w *worker) produce() ([]string, error) {
-	w.getText()
-
-	text := w.text
-
-	maskedText := w.spamMasker(text)
-
-	result := make([]string, 0, 1)
-	result = append(result, maskedText)
-
-	return result, nil
-}
-
-func (w *worker) present() ([]string, error) {
-	filepath := w.from
-	if w.to != "" {
-		filepath = w.to
-	}
-
-	f, err := os.Create(filepath)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer f.Close()
-
-	for _, line := range w.result {
-		_, err := f.WriteString(line + "\n")
-		if err != nil {
-			log.Fatal(err)
-		}
-	}
-
-	return nil, nil
-}
-
-func (w *worker) getString() error {
-
-	data, err := os.ReadFile(w.from)
-	if err != nil {
-		return err
-	}
-
-	w.text = string(data)
-
+	f.spamMasker()
 	return nil
 }
 
-func (w *worker) getFilePath() error {
+func (f *file) getFilePath() error {
 	args := os.Args[1:]
 
 	if len(args) > 2 || len(args) == 0 {
 		return fmt.Errorf("Enter at least one file path. Maximum 2 file paths")
 	}
 
-	w.from = args[0]
+	f.filepathFrom = args[0]
 
 	if len(args) == 2 {
-		w.to = args[1]
+		f.filepathTo = args[1]
 	}
 
 	return nil
 }
 
-func (s *service) spamMasker(buffer string) string {
+func (f *file) spamMasker() {
 	// Initialize variable
 	var output []rune
-
 	var toMask bool
-
 	validate := "http://"
+	input := []rune(f.output)
 
-	input := []rune(buffer)
+	for i := 0; i < len(input); i++ {
 
-	for index := 0; index < len(input); index++ {
 		// Check if last 7 chars of []output == http://
-		if (len(output) >= len(validate)) && (string(output[index-len(validate):index]) == validate) {
+		if (len(output) >= len(validate)) && (string(output[i-len(validate):i]) == validate) {
 			toMask = true
-		} else if input[index] == ' ' {
+		}
+
+		// Check if link finished
+		if input[i] == ' ' {
 			toMask = false
 		}
+
 		// Mask
 		if toMask {
 			output = append(output, '*')
-
-			continue
+		} else {
+			output = append(output, input[i])
 		}
-
-		char := input[index]
-		output = append(output, char)
 	}
 
-	return string(output)
+	f.output = string(output)
+}
+
+func (f *file) readFile() error {
+	data, err := os.ReadFile(f.filepathFrom)
+	if err != nil {
+		return err
+	}
+
+	f.output = string(data)
+
+	return nil
+}
+
+func (f *file) present() error {
+	filepath := f.filepathFrom
+	if f.filepathTo != "" {
+		filepath = f.filepathTo
+	}
+
+	result, err := os.Create(filepath)
+	if err != nil {
+		return fmt.Errorf("Present error | present(): %w", err)
+	}
+	defer result.Close()
+
+	buffer := []rune(f.output)
+
+	for _, line := range buffer {
+		_, err := result.WriteString(string(line))
+		if err != nil {
+			return fmt.Errorf("Present error | present(): %w", err)
+		}
+	}
+
+	return nil
+}
+
+func Run() error {
+	file := new(file)
+
+	file.produce()
+
+	err := file.present()
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
