@@ -1,5 +1,7 @@
 package mask
 
+import "fmt"
+
 type producer interface {
 	produce() error
 }
@@ -14,6 +16,7 @@ type Service struct {
 }
 
 type file struct {
+	//nolint: structcheck
 	output, filepathFrom, filepathTo string
 }
 
@@ -27,11 +30,12 @@ func Run() error {
 		pres: pres,
 	}
 
-	service.prod.produce()
+	if err := service.prod.produce(); err != nil {
+		return fmt.Errorf("err: run():%w", err)
+	}
 
-	err := service.pres.present()
-	if err != nil {
-		return err
+	if err := service.pres.present(); err != nil {
+		return fmt.Errorf("err: run():%w", err)
 	}
 
 	return nil

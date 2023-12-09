@@ -17,16 +17,14 @@ func (f *filePresenter) present() error {
 
 	result, err := os.Create(filepath)
 	if err != nil {
-		return fmt.Errorf("Present error | present(): %w", err)
+		return fmt.Errorf("present error | present(): %w", err)
 	}
 	defer result.Close()
 
-	buffer := []rune(f.output)
-
-	for _, line := range buffer {
+	for _, line := range f.output {
 		_, err := result.WriteString(string(line))
 		if err != nil {
-			return fmt.Errorf("Present error | present(): %w", err)
+			return fmt.Errorf("present error | present(): %w", err)
 		}
 	}
 
