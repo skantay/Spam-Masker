@@ -21,7 +21,9 @@ func (f *filePresenter) present() error {
 	}
 	defer result.Close()
 
-	for _, line := range f.output {
+	var output string
+	output = <-f.output
+	for _, line := range output {
 		_, err := result.WriteString(string(line))
 		if err != nil {
 			return fmt.Errorf("present error | present(): %w", err)

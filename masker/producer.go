@@ -11,6 +11,8 @@ type fileProducer struct {
 }
 
 func (f *fileProducer) produce() error {
+	go f.spamMasker()
+
 	if err := f.getFilePath(); err != nil {
 		return fmt.Errorf("produce error | getFilePath(): %w", err)
 	}
@@ -18,8 +20,6 @@ func (f *fileProducer) produce() error {
 	if err := f.readFile(); err != nil {
 		return fmt.Errorf("produce error | readFile(): %w", err)
 	}
-
-	f.spamMasker()
 
 	return nil
 }
@@ -52,7 +52,7 @@ func (f *fileProducer) spamMasker() {
 	var toMask bool
 
 	validate := "http://"
-	input := []rune(f.output)
+	input := []rune(<-f.output)
 
 	for index := 0; index < len(input); index++ {
 		// Check if last 7 chars of []output == http://
@@ -73,7 +73,7 @@ func (f *fileProducer) spamMasker() {
 		}
 	}
 
-	f.output = string(output)
+	f.output <- string(output)
 }
 
 func (f *fileProducer) readFile() error {
@@ -82,7 +82,7 @@ func (f *fileProducer) readFile() error {
 		return fmt.Errorf("os.ReadFile:%w", err)
 	}
 
-	f.output = string(data)
+	f.output <- string(data)
 
 	return nil
 }
