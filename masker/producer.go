@@ -1,9 +1,13 @@
 package mask
 
 import (
+	"bufio"
 	"errors"
 	"fmt"
 	"os"
+	"sync"
+
+	"github.com/adhocore/chin"
 )
 
 type fileProducer struct {
@@ -45,14 +49,18 @@ func (f *fileProducer) getFilePath() error {
 	return nil
 }
 
-func (f *fileProducer) spamMasker() {
+func (f *fileProducer) spamMasker(wg *sync.WaitGroup, inputB string) {
 	// Initialize variable
 	var output []rune
 
 	var toMask bool
 
 	validate := "http://"
+<<<<<<< HEAD
 	input := []rune(<-f.output)
+=======
+	input := []rune(inputB)
+>>>>>>> new
 
 	for index := 0; index < len(input); index++ {
 		// Check if last 7 chars of []output == http://
@@ -73,16 +81,39 @@ func (f *fileProducer) spamMasker() {
 		}
 	}
 
+<<<<<<< HEAD
 	f.output <- string(output)
+=======
+	f.output = f.output + "\n" + string(output)
+	wg.Done()
+>>>>>>> new
 }
 
 func (f *fileProducer) readFile() error {
-	data, err := os.ReadFile(f.filepathFrom)
+	file, err := os.Open(f.filepathFrom)
 	if err != nil {
-		return fmt.Errorf("os.ReadFile:%w", err)
+		return err
 	}
+	defer file.Close()
 
+	scanner := bufio.NewScanner(file)
+
+	wg := new(sync.WaitGroup)
+
+	s := chin.New().WithWait(wg)
+	go s.Start()
+
+	for scanner.Scan() {
+		wg.Add(1)
+		go f.spamMasker(wg, scanner.Text())
+	}
+	s.Stop()
+
+<<<<<<< HEAD
 	f.output <- string(data)
+=======
+	wg.Wait()
+>>>>>>> new
 
 	return nil
 }
