@@ -22,7 +22,7 @@ func (f *filePresenter) present() error {
 	defer result.Close()
 
 	var output string
-	output = <-f.output
+	output = f.output
 	for _, line := range output {
 		_, err := result.WriteString(string(line))
 		if err != nil {

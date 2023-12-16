@@ -17,14 +17,11 @@ type Service struct {
 
 type file struct {
 	//nolint: structcheck
-	filepathFrom, filepathTo string
-	output                   chan string
+	output, filepathFrom, filepathTo string
 }
 
 func Run() error {
-	text := &file{
-		output: make(chan string),
-	}
+	text := new(file)
 	prod := &fileProducer{text}
 	pres := &filePresenter{text}
 
